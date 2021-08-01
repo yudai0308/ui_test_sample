@@ -12,8 +12,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
-import org.hamcrest.Matchers.`is`
-import org.hamcrest.Matchers.not
+import org.hamcrest.Matchers.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -30,22 +29,31 @@ class LoginActivityTest {
 
     @Before
     fun setUp() {
+        // UiDevice インスタンスを取得。
         device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     }
 
     @Test
     fun loginActivityTest() {
-        val noUserNameMessage = onView(withId(R.id.no_user_name_message)).apply {
-            // メッセージが表示されていないことを確認
-            // doesNotExist() は存在しないことを確認するため意味が異なる
-            check(matches(not(isDisplayed())))
-        }
+        // メッセージが表示されていないことを確認
+        // なお doesNotExist() は存在しないことを確認するため意味が異なる
+        val noUserNameMessage = onView(withId(R.id.no_user_name_message))
+        noUserNameMessage.check(matches(not(isDisplayed())))
 
-        val loginButton = onView(withId(R.id.login_button)).apply {
-            perform(click())
-        }
-        // EditText に何も入力せずログインボタンを押したとき、メッセージが表示されることを確認
-        noUserNameMessage.check(matches(isDisplayed()))
+        // ログインボタンを押下
+        val loginButton = onView(withId(R.id.login_button))
+        loginButton.perform(click())
+
+        // EditText に何も入力せずログインボタンを押したとき
+        // メッセージが　正しく表示されることを確認
+        noUserNameMessage.check(
+            matches(
+                allOf(
+                    isDisplayed(),
+                    withText("ユーザー名を入力してください")
+                )
+            )
+        )
 
         // EditText にユーザー名を入れてログインボタンをクリック
         val userName = "福沢諭吉"
@@ -63,6 +71,8 @@ class LoginActivityTest {
             )
         )
         val success = device.wait(cond, 5000L)
+
+        // 指定した条件が満たされていることを確認
         assertThat(success, `is`(true))
 
         // ログイン後のメッセージが正しいことを確認
